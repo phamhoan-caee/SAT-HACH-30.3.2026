@@ -111,7 +111,7 @@
 
 <script>
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRCf-F3dCvJi6pr4elMqwG9YrNtmB-GWds7YCmf09JbTv8AY3gtrwXpcMXc8KTQmpuJhc0al2jSBR4B/pub?single=true&output=csv&gid=";
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyIBevU_sW12s740Z8FVllX-EhomhvSozEsmG58lZQUL5heRKqEiqzbLeT82MFPBQD2Bg/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4S3ImAbcamKzBbOqteRxF6Xkz89ST8gVpSKN5hewTZwdZ4nP7Idpjs33xe46YzxCuhg/exec";
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
@@ -251,35 +251,17 @@
         }, 1000);
     }
 
-    async function submitQuiz(auto = false) {
-        if(isSubmitted) return;
-        if(!auto && !confirm("Xác nhận kết thúc bài thi và nộp bài?")) return;
-        
-        isSubmitted = true; 
-        clearInterval(timerInterval);
+   // Trong hàm submitQuiz(auto = false)
+const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
 
-        let score = 0;
-        const labels = ['A', 'B', 'C', 'D'];
-        selectedQuestions.forEach((q, i) => {
-            const ans = studentAnswers.find(a => a.qIndex === i);
-            if(ans) {
-                const idx = q.options.indexOf(ans.selected);
-                if(idx !== -1 && labels[idx] === q.answer) score++;
-            }
-        });
-
-        const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-    const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI"; // Thêm dòng này
-    const modeLabel = document.getElementById('modeToggle').checked ? "ÔN TẬP" : "SÁT HẠCH";
-    
-    const formData = new URLSearchParams();
-    formData.append('name', document.getElementById('studentName').value.trim());
-    formData.append('studentID', document.getElementById('studentID').value.trim());
-    formData.append('jobName', document.getElementById('job-display-header').innerText);
-    formData.append('score', score);
-    formData.append('status', status);
-    formData.append('mode', modeValue); // GỬI THÊM CÁI NÀY VỀ APPS SCRIPT
-    formData.append('cheat', cheatCount);
+const formData = new URLSearchParams();
+formData.append('name', document.getElementById('studentName').value.trim());
+formData.append('studentID', document.getElementById('studentID').value.trim());
+formData.append('jobName', document.getElementById('job-display-header').innerText); // Apps Script sẽ đọc cái này
+formData.append('score', score);
+formData.append('status', status);
+formData.append('mode', modeValue); 
+formData.append('cheat', cheatCount);
 
         document.getElementById('submitBtn').innerText = "ĐANG LƯU...";
 
