@@ -110,7 +110,7 @@
 <script>
     // 1. Sửa link gốc: Thêm &gid= vào cuối
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv";
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz6gzag6tiOjYOizZIwTFzMmjj2MLJ2bDspICQkphu6JGIFgb9tXfW_5zds4jnrrib4/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyK1iiBdkTWq3pYi0XS2Y787zJvEv6wYNe2QAgCz3a7ItyJwPSzQB8APvxsnp9czQBE/exec";
 
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
@@ -246,50 +246,52 @@
         }, 1000);
     }
 
-    async function submitQuiz(auto = false) {
-        if(isSubmitted) return;
-        if(!auto && !confirm("Xác nhận nộp bài?")) return;
-        isSubmitted = true; 
-        clearInterval(timerInterval);
+   async function submitQuiz(auto = false) {
+    if(isSubmitted) return;
+    if(!auto && !confirm("Xác nhận nộp bài?")) return;
+    isSubmitted = true; 
+    clearInterval(timerInterval);
 
-        let score = 0;
-        const labels = ['A', 'B', 'C', 'D'];
-        selectedQuestions.forEach((q, i) => {
-            const ans = studentAnswers.find(a => a.qIndex === i);
-            if(ans) {
-                const idx = q.options.indexOf(ans.selected);
-                if(idx !== -1 && labels[idx] === q.answer) score++;
-            }
-        });
-
-        const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-        const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
-        
-        alert(`KẾT QUẢ: ${score}/30 câu. \nTrạng thái: ${status}`);
-
-        const formData = new URLSearchParams();
-        formData.append('name', document.getElementById('studentName').value.trim());
-        formData.append('studentID', document.getElementById('studentID').value.trim());
-        formData.append('jobName', document.getElementById('job-display-header').innerText);
-        formData.append('score', score);
-        formData.append('status', status);
-        formData.append('mode', modeValue);
-        formData.append('cheat', cheatCount);
-
-        try {
-            await fetch(WEB_APP_URL, { 
-                method: "POST", 
-                mode: "no-cors", 
-                cache: 'no-cache',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData.toString() 
-            });
-            alert("Dữ liệu đã được lưu hệ thống thành công!");
-            location.reload(); 
-        } catch (e) { 
-            alert("❌ Lỗi lưu dữ liệu! Hãy báo lại với giáo viên."); 
+    let score = 0;
+    const labels = ['A', 'B', 'C', 'D'];
+    selectedQuestions.forEach((q, i) => {
+        const ans = studentAnswers.find(a => a.qIndex === i);
+        if(ans) {
+            const idx = q.options.indexOf(ans.selected);
+            if(idx !== -1 && labels[idx] === q.answer) score++;
         }
+    });
+
+    const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
+    const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
+    
+    alert(`KẾT QUẢ: ${score}/30 câu. \nTrạng thái: ${status}`);
+
+    // Dữ liệu đóng gói thành JSON
+    const payload = {
+        name: document.getElementById('studentName').value.trim(),
+        studentID: document.getElementById('studentID').value.trim(),
+        jobName: document.getElementById('job-display-header').innerText,
+        score: score,
+        mode: modeValue,
+        cheat: cheatCount
+    };
+
+    try {
+        // Sử dụng fetch với JSON string
+        await fetch(WEB_APP_URL, { 
+            method: "POST", 
+            mode: "no-cors", // Google Apps Script yêu cầu no-cors khi gửi từ domain khác
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload) 
+        });
+        
+        alert("Dữ liệu đã được lưu hệ thống thành công!");
+        location.reload(); 
+    } catch (e) { 
+        alert("❌ Lỗi lưu dữ liệu! Hãy báo lại với giáo viên."); 
     }
+}
 </script>
 </body>
 </html>
