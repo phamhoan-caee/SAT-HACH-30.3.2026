@@ -10,59 +10,37 @@
             --btn-orange: #ff6600; --btn-blue: #3366ff;
             --success: #28a745; --danger: #dc3545;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; padding-top: 60px; }
-
         #warning-overlay {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(220, 53, 69, 0.9); color: white; z-index: 9999;
             justify-content: center; align-items: center; text-align: center; font-size: 2rem; padding: 20px;
         }
-
         .caee-header {
             background: var(--header-blue); color: white; padding: 10px 20px;
             display: none; justify-content: space-between; align-items: center;
             position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         .timer-box { background: #ff3333; padding: 5px 15px; border-radius: 4px; font-weight: bold; min-width: 80px; text-align: center; }
-
         #start-screen { min-height: 80vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
         .welcome-container { background: white; width: 100%; max-width: 450px; border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .form-control { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; outline: none; }
-        .form-control:focus { border-color: var(--btn-blue); }
-        
         .btn-start { 
             background: var(--success); color: white; border: none; width: 100%; padding: 15px; 
             border-radius: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2); font-size: 1rem;
         }
-        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3); }
-        .btn-start:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-
+        .btn-start:disabled { background: #ccc; cursor: not-allowed; }
         #quiz-screen { padding: 20px; display: none; grid-template-columns: 1fr 320px; gap: 20px; max-width: 1300px; margin: auto; }
         #quiz-content { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        .option-item {
-            border: 2px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 12px;
-            cursor: pointer; transition: 0.2s; font-weight: 500; display: flex; align-items: center;
-        }
-        .option-item:hover:not(.disabled) { background: #f8f9fa; border-color: var(--btn-blue); }
+        .option-item { border: 2px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; font-weight: 500; display: flex; align-items: center; }
         .option-item.selected { background: #e7f0ff; border-color: var(--btn-blue); color: var(--caee-blue); }
         .option-item.correct { background: #d4edda !important; border-color: #28a745 !important; color: #155724 !important; }
         .option-item.wrong { background: #f8d7da !important; border-color: #dc3545 !important; color: #721c24 !important; }
-
-        @keyframes blink-danger {
-            0% { background-color: #ff3333; }
-            50% { background-color: #ff0000; transform: scale(1.05); }
-            100% { background-color: #ff3333; }
-        }
         .blink-now { animation: blink-danger 0.8s infinite; }
-
-        @media (max-width: 900px) { 
-            #quiz-screen { grid-template-columns: 1fr; padding-top: 80px; } 
-            .sidebar-right { order: -1; }
-        }
+        @keyframes blink-danger { 0% { background-color: #ff3333; } 50% { background-color: #ff0000; transform: scale(1.05); } 100% { background-color: #ff3333; } }
+        @media (max-width: 900px) { #quiz-screen { grid-template-columns: 1fr; padding-top: 80px; } .sidebar-right { order: -1; } }
     </style>
 </head>
 <body oncontextmenu="return false">
@@ -88,12 +66,10 @@
             </select>
             <input type="text" id="studentName" class="form-control" placeholder="Họ và Tên học viên (VD: NGUYỄN VĂN A)">
             <input type="text" id="studentID" class="form-control" placeholder="Mã học viên / Khóa thi (VD: K57)">
-            
             <div style="display:flex; align-items:center; margin: 15px 0; justify-content: center; gap:10px;">
                 <input type="checkbox" id="modeToggle" style="width:18px; height:18px; cursor: pointer;">
                 <label for="modeToggle" style="cursor:pointer; font-size: 0.95rem;">Chế độ Ôn tập (Hiện đáp án & giải thích)</label>
             </div>
-
             <button class="btn-start" onclick="startQuiz()">VÀO THI NGAY ➔</button>
         </div>
     </div>
@@ -110,12 +86,15 @@
     </div>
 
 <script>
-    const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRCf-F3dCvJi6pr4elMqwG9YrNtmB-GWds7YCmf09JbTv8AY3gtrwXpcMXc8KTQmpuJhc0al2jSBR4B/pub?single=true&output=csv&gid=";
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4S3ImAbcamKzBbOqteRxF6Xkz89ST8gVpSKN5hewTZwdZ4nP7Idpjs33xe46YzxCuhg/exec";
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
-    // ... (Giữ nguyên phần Security và onblur của thầy) ...
+    // Tính năng bảo mật chống thoát trang
+    function activateSecurity() {
+        window.onblur = () => { if(!isSubmitted) { cheatCount++; document.getElementById('warning-overlay').style.display = 'flex'; }};
+        window.onfocus = () => { document.getElementById('warning-overlay').style.display = 'none'; };
+    }
 
     async function startQuiz() {
         const name = document.getElementById('studentName').value.trim();
@@ -137,19 +116,16 @@
         try {
             const response = await fetch(`${WEB_APP_URL}?sheet=${encodeURIComponent(sheetName)}`);
             const rawData = await response.json();
-            if (rawData.error) throw new Error(rawData.error);
-
-            // CHUẨN HÓA DỮ LIỆU: Chuyển CauHoi, A, B, C, D... thành chuẩn giao diện
             allQuestions = rawData.map(item => ({
                 question: item.CauHoi || item.question,
-                options: [item.A, item.B, item.C, item.D].filter(o => o), // Lấy A, B, C, D bỏ trống
+                options: [item.A, item.B, item.C, item.D].filter(o => o),
                 answer: item.DapAnDung || item.answer,
                 image: item.image || item.HinhAnh || "",
                 explain: item.Giaithich || item.explain || ""
             }));
 
             if (allQuestions.length < 30) {
-                alert("Ngân hàng câu hỏi chỉ có " + allQuestions.length + " câu. Cần tối thiểu 30 câu!");
+                alert("Ngân hàng câu hỏi không đủ 30 câu!");
                 location.reload(); return;
             }
 
@@ -165,11 +141,11 @@
             showQuestion(0);
             startTimer();
         } catch (e) {
-            alert("LỖI: " + e.message);
-            btn.innerText = "VÀO THI NGAY ➔";
-            btn.disabled = false;
+            alert("LỖI KẾT NỐI: " + e.message);
+            btn.innerText = "VÀO THI NGAY ➔"; btn.disabled = false;
         }
     }
+
     function showQuestion(idx) {
         if (idx < 0 || idx >= 30 || isSubmitted) return;
         currentQuestionIndex = idx;
@@ -178,20 +154,12 @@
         const isPractice = document.getElementById('modeToggle').checked;
         const labels = ['A', 'B', 'C', 'D'];
 
-        let html = `<h3 style="margin-bottom:20px; color:var(--caee-blue); line-height: 1.4;">Câu ${idx + 1}: ${q.question}</h3>`;
-        
-        // Hiển thị hình ảnh từ cột HÌNH ẢNH (nếu có)
-        if (q.image && q.image.trim() !== "") {
-            html += `<div style="text-align:center; margin-bottom:20px;">
-                        <img src="${q.image}" style="max-width:100%; max-height:280px; border-radius:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #eee;">
-                     </div>`;
-        }
+        let html = `<h3 style="margin-bottom:20px; color:var(--caee-blue);">Câu ${idx + 1}: ${q.question}</h3>`;
+        if (q.image) html += `<div style="text-align:center; margin-bottom:20px;"><img src="${q.image}" style="max-width:100%; max-height:280px; border-radius:8px;"></div>`;
 
         q.options.forEach((opt, i) => {
-            if(!opt) return; // Bỏ qua nếu đáp án trống (ví dụ chỉ có A, B, C)
             let cls = "";
             const isSelected = stored && opt === stored.selected;
-            
             if (isPractice && stored) {
                 if (labels[i] === q.answer) cls = "correct";
                 else if (isSelected) cls = "wrong";
@@ -201,18 +169,12 @@
             html += `<div class="option-item ${cls}" ${action}><b>${labels[i]}.</b>&nbsp;${opt}</div>`;
         });
 
-        // Hiển thị giải thích ở chế độ ôn tập
-        if(isPractice && stored) {
-            html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; border-left:5px solid #ffa000; margin-top:15px; font-size: 0.95rem;">
-                        <b style="color: #856404;">💡 Giải thích:</b> ${q.explain || "Không có giải thích cụ thể cho câu hỏi này."}
-                     </div>`;
-        }
+        if(isPractice && stored) html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; margin-top:15px;"><b>💡 Giải thích:</b> ${q.explain || "Trình tự vận hành an toàn."}</div>`;
         
-        html += `<div style="display:flex; justify-content:space-between; margin-top:25px; gap:10px;">
-                    <button class="btn-start" style="background:var(--btn-blue); padding: 10px;" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
-                    <button class="btn-start" style="background:var(--btn-blue); padding: 10px;" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
+        html += `<div style="display:flex; justify-content:space-between; margin-top:25px;">
+                    <button class="btn-start" style="background:var(--btn-blue); width:48%;" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
+                    <button class="btn-start" style="background:var(--btn-blue); width:48%;" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
                 </div>`;
-        
         document.getElementById('quiz-content').innerHTML = html;
         renderGrid();
     }
@@ -230,8 +192,8 @@
         selectedQuestions.forEach((_, i) => {
             const hasAns = studentAnswers.some(a => a.qIndex === i);
             const active = i === currentQuestionIndex ? 'border:3px solid var(--btn-orange);' : '';
-            const bg = hasAns ? 'background:var(--caee-blue); color:white;' : 'background:white; color: #333;';
-            grid.innerHTML += `<div onclick="showQuestion(${i})" style="height:40px; display:flex; justify-content:center; align-items:center; border-radius:5px; cursor:pointer; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition: 0.2s; ${bg} ${active}">${i+1}</div>`;
+            const bg = hasAns ? 'background:var(--caee-blue); color:white;' : 'background:white;';
+            grid.innerHTML += `<div onclick="showQuestion(${i})" style="height:40px; display:flex; justify-content:center; align-items:center; border-radius:5px; cursor:pointer; font-weight:bold; ${bg} ${active}">${i+1}</div>`;
         });
     }
 
@@ -239,45 +201,43 @@
         timerInterval = setInterval(() => {
             timeLeft--;
             let m = Math.floor(timeLeft/60), s = timeLeft%60;
-            const display = document.getElementById('timer');
-            display.innerText = `${m}:${s<10?'0':''}${s}`;
-            
-            if(timeLeft <= 120) { 
-                display.classList.add('blink-now'); 
-                document.getElementById('submitBtn').classList.add('blink-now'); 
-            }
+            document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
             if(timeLeft <= 0) submitQuiz(true);
         }, 1000);
     }
 
- // Trong hàm submitQuiz(auto = false)
-const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
+    async function submitQuiz(auto = false) {
+        if(isSubmitted) return;
+        if(!auto && !confirm("Xác nhận nộp bài?")) return;
+        
+        isSubmitted = true; clearInterval(timerInterval);
+        let score = 0;
+        const labels = ['A', 'B', 'C', 'D'];
+        selectedQuestions.forEach((q, i) => {
+            const ans = studentAnswers.find(a => a.qIndex === i);
+            if(ans && labels[q.options.indexOf(ans.selected)] === q.answer) score++;
+        });
 
-const formData = new URLSearchParams();
-formData.append('name', document.getElementById('studentName').value.trim());
-formData.append('studentID', document.getElementById('studentID').value.trim());
-formData.append('jobName', document.getElementById('job-display-header').innerText); // Apps Script sẽ đọc cái này
-formData.append('score', score);
-formData.append('status', status);
-formData.append('mode', modeValue); 
-formData.append('cheat', cheatCount);
+        const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
+        const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
+        const modeLabel = modeValue === "ONTAP" ? "ÔN TẬP" : "SÁT HẠCH";
+
+        const formData = new URLSearchParams();
+        formData.append('name', document.getElementById('studentName').value.trim());
+        formData.append('studentID', document.getElementById('studentID').value.trim());
+        formData.append('jobName', document.getElementById('job-display-header').innerText);
+        formData.append('score', score);
+        formData.append('status', status);
+        formData.append('mode', modeValue);
+        formData.append('cheat', cheatCount);
 
         document.getElementById('submitBtn').innerText = "ĐANG LƯU...";
-
         try {
-            await fetch(WEB_APP_URL, { 
-                method: "POST", 
-                mode: "no-cors", 
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData.toString() 
-            });
-            
-            alert(`KẾT QUẢ ${modeLabel}\n----------------------\nSố câu đúng: ${score}/30\nTrạng thái: ${status}\n\nDữ liệu đã được hệ thống ghi nhận thành công!`);
-            location.reload(); 
-            
-        } catch (e) { 
-            console.error("Lỗi nộp bài:", e);
-            alert(`LỖI KẾT NỐI! Kết quả của bạn là: ${score}/30 (${status}).\nVui lòng chụp ảnh màn hình này báo cho giáo viên vì dữ liệu chưa thể lưu tự động.`); 
+            await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: formData });
+            alert(`KẾT QUẢ ${modeLabel}: ${score}/30 - ${status}\nDữ liệu đã lưu thành công!`);
+            location.reload();
+        } catch (e) {
+            alert(`LỖI LƯU DỮ LIỆU! Kết quả: ${score}/30. Hãy chụp màn hình báo giáo viên.`);
         }
     }
 </script>
