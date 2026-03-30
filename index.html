@@ -144,15 +144,18 @@
 
     async function startQuiz() {
         const name = document.getElementById('studentName').value.trim();
-        const id = document.getElementById('studentID').value.trim();
-        const jobSelect = document.getElementById('jobType');
-        const jobName = jobSelect.options[jobSelect.selectedIndex].text;
-        const jobKey = jobSelect.value;
-        
-        let sheetName = "";
-        if (jobKey === "NGHỀ: VẬN HÀNH XE NÂNG HÀNG") sheetName = "cauhoinanghang";
-        else if (jobKey === "NGHỀ: VẬN HÀNH CẦN TRỤC") sheetName = "cauhoicantruc";
-        else if (jobKey === "NGHỀ: VẬN HÀNH CẦU TRỤC") sheetName = "cauhoicautruc";
+    const id = document.getElementById('studentID').value.trim();
+    const jobSelect = document.getElementById('jobType');
+    const jobName = jobSelect.options[jobSelect.selectedIndex].text;
+    const jobKey = jobSelect.value; // Đây là con số GID
+
+    if (!name || !id) return alert("Vui lòng nhập Họ tên và Mã lớp trước khi thi!");
+
+    // SỬA LỖI XÁC ĐỊNH SHEET CÂU HỎI Ở ĐÂY
+    let sheetName = "";
+    if (jobName.includes("XE NÂNG")) sheetName = "câu hỏi xe nâng hàng";
+    else if (jobName.includes("CẦN TRỤC")) sheetName = "cauhoicantruc";
+    else if (jobName.includes("CẦU TRỤC")) sheetName = "cau hoi cau truc";
 
         if (!name || !id) return alert("Vui lòng nhập Họ tên và Mã lớp trước khi thi!");
 
@@ -293,15 +296,17 @@
         });
 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-        const modeLabel = document.getElementById('modeToggle').checked ? "ÔN TẬP" : "SÁT HẠCH";
-        
-        const formData = new URLSearchParams();
-        formData.append('name', document.getElementById('studentName').value.trim());
-        formData.append('studentID', document.getElementById('studentID').value.trim());
-        formData.append('jobName', document.getElementById('job-display-header').innerText);
-        formData.append('score', score);
-        formData.append('status', status);
-        formData.append('cheat', cheatCount);
+    const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI"; // Thêm dòng này
+    const modeLabel = document.getElementById('modeToggle').checked ? "ÔN TẬP" : "SÁT HẠCH";
+    
+    const formData = new URLSearchParams();
+    formData.append('name', document.getElementById('studentName').value.trim());
+    formData.append('studentID', document.getElementById('studentID').value.trim());
+    formData.append('jobName', document.getElementById('job-display-header').innerText);
+    formData.append('score', score);
+    formData.append('status', status);
+    formData.append('mode', modeValue); // GỬI THÊM CÁI NÀY VỀ APPS SCRIPT
+    formData.append('cheat', cheatCount);
 
         document.getElementById('submitBtn').innerText = "ĐANG LƯU...";
 
