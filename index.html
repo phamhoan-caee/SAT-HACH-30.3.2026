@@ -82,9 +82,9 @@
         <div class="welcome-container">
             <h2 style="text-align:center; color:var(--caee-blue); margin-bottom: 20px;">HỆ THỐNG SÁT HẠCH - CAEE</h2>
             <select id="jobType" class="form-control" style="font-weight: bold; background: #fffbe6;">
-                <option value="xenang">NGHỀ: VẬN HÀNH XE NÂNG HÀNG</option>
-                <option value="cantruc">NGHỀ: VẬN HÀNH CẦN TRỤC</option>
-                <option value="cautruc">NGHỀ: VẬN HÀNH CẦU TRỤC</option>
+                 <option value="1176419369">NGHỀ: VẬN HÀNH XE NÂNG HÀNG</option>
+                <option value="1088937209">NGHỀ: VẬN HÀNH CẦN TRỤC</option>
+                <option value="1148572149">NGHỀ: VẬN HÀNH CẦU TRỤC</option>
             </select>
             <input type="text" id="studentName" class="form-control" placeholder="Họ và Tên học viên (VD: NGUYỄN VĂN A)">
             <input type="text" id="studentID" class="form-control" placeholder="Mã học viên / Khóa thi (VD: K57)">
@@ -111,7 +111,7 @@
 
 <script>
     // URL WEB APP CỦA BẠN (Đã cập nhật từ code của bạn)
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySdxJ_LnOVaSnaeAqHWMdHdKKfFyE2rkJr9EZ3q-4lfdk9Pvro5JF_t3tyZwnDnTI5wA/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxIUSTgaFNgk8h5zDNGg4DqpfKHbz28VBNTJqoNoY1GFmXCM1Sz1Fdo4Kw9IaWC1dybTg/exec";
 
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
@@ -150,9 +150,9 @@
         const jobKey = jobSelect.value;
         
         let sheetName = "";
-        if (jobKey === "xenang") sheetName = "câu hỏi xe nâng hàng";
-        else if (jobKey === "cantruc") sheetName = "cauhoicantruc";
-        else if (jobKey === "cautruc") sheetName = "cau hoi cau truc";
+        if (jobKey === "NGHỀ: VẬN HÀNH XE NÂNG HÀNG") sheetName = "cauhoinanghang";
+        else if (jobKey === "NGHỀ: VẬN HÀNH CẦN TRỤC") sheetName = "cauhoicantruc";
+        else if (jobKey === "NGHỀ: VẬN HÀNH CẦU TRỤC") sheetName = "cauhoicautruc";
 
         if (!name || !id) return alert("Vui lòng nhập Họ tên và Mã lớp trước khi thi!");
 
