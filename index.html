@@ -107,12 +107,14 @@
     </div>
 
 <script>
-    const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pubhtml";
-    const WEB_APP_URL = "hhttps://script.google.com/macros/s/AKfycbws7AC212RL4mktSJOjPEUCP2yT8mWF4o8ObslrDDG241LjoEPMjixXD1-o4EXYRNvZ/exec";
+    // 1. Sửa link gốc: Thêm &gid= vào cuối
+    const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwEe_9GuUAZ-auFfJz3PnS9TgKeaMEwlp-WBS-4PQI68zRhJU4wYmzPlYFWvRX3HMZ3/exec";
 
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
+    // Các hàm bảo mật
     window.onblur = () => { 
         if(!isSubmitted && selectedQuestions.length > 0) { 
             cheatCount++; 
@@ -138,15 +140,19 @@
         });
     }
 
+    // --- HÀM START QUIZ ĐÃ SỬA LỖI CÚ PHÁP ---
     async function startQuiz() {
         const name = document.getElementById('studentName').value.trim();
         const id = document.getElementById('studentID').value.trim();
         const gid = document.getElementById('jobType').value;
         const jobName = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
+        
         if(!name || !id) return alert("Vui lòng nhập đầy đủ thông tin!");
 
         Papa.parse(BASE_CSV_URL + gid, {
-            download: true, header: true, skipEmptyLines: true,
+            download: true, 
+            header: true, 
+            skipEmptyLines: true,
             complete: function(results) {
                 allQuestions = results.data.filter(i => i.CauHoi).map(i => ({
                     question: i.CauHoi,
@@ -154,18 +160,25 @@
                     answer: i.DapAnDung ? i.DapAnDung.trim().toUpperCase() : "",
                     explanation: i.Giaithich || "Thực hiện đúng quy trình ATKT."
                 }));
+
                 if(allQuestions.length < 30) return alert("Dữ liệu không đủ 30 câu!");
+
                 document.getElementById('display-name').innerText = name.toUpperCase();
                 document.getElementById('job-display-header').innerText = jobName;
                 selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 30);
+                
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('caee-header').style.display = 'flex';
                 document.getElementById('quiz-screen').style.display = 'grid';
+                
                 activateSecurity();
                 showQuestion(0);
                 startTimer();
+            }, // Đóng hàm complete
+            error: function(err) {
+                alert("Lỗi tải dữ liệu. Vui lòng kiểm tra lại kết nối!");
             }
-        });
+        }); // Đóng Papa.parse
     }
 
     function showQuestion(idx) {
@@ -190,6 +203,7 @@
         });
 
         if(isPractice && stored) html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; border-left:5px solid #ffa000; margin-top:10px;"><b>Giải thích:</b> ${q.explanation}</div>`;
+        
         html += `<div style="display:flex; justify-content:space-between; margin-top:20px; gap:10px;">
                     <button class="btn-start" style="background:var(--btn-blue);" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
                     <button class="btn-start" style="background:var(--btn-blue);" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
@@ -222,64 +236,59 @@
             let m = Math.floor(timeLeft/60), s = timeLeft%60;
             const display = document.getElementById('timer');
             display.innerText = `${m}:${s<10?'0':''}${s}`;
-            if(timeLeft <= 120) { display.style.background = "yellow"; display.style.color = "red"; document.getElementById('submitBtn').classList.add('blink-now'); }
+            if(timeLeft <= 120) { 
+                display.style.background = "yellow"; 
+                display.style.color = "red"; 
+                document.getElementById('submitBtn').classList.add('blink-now'); 
+            }
             if(timeLeft <= 0) submitQuiz(true);
         }, 1000);
     }
 
-async function submitQuiz(auto = false) {
-    if(isSubmitted) return;
-    if(!auto && !confirm("Xác nhận nộp bài?")) return;
-    isSubmitted = true; 
-    clearInterval(timerInterval);
+    async function submitQuiz(auto = false) {
+        if(isSubmitted) return;
+        if(!auto && !confirm("Xác nhận nộp bài?")) return;
+        isSubmitted = true; 
+        clearInterval(timerInterval);
 
-    let score = 0;
-    const labels = ['A', 'B', 'C', 'D'];
-    selectedQuestions.forEach((q, i) => {
-        const ans = studentAnswers.find(a => a.qIndex === i);
-        if(ans) {
-            // Tìm vị trí của đáp án học viên chọn trong mảng options gốc
-            const idx = q.options.indexOf(ans.selected);
-            if(idx !== -1) {
-                const selectedLabel = labels[idx];
-                if(selectedLabel === q.answer) score++;
+        let score = 0;
+        const labels = ['A', 'B', 'C', 'D'];
+        selectedQuestions.forEach((q, i) => {
+            const ans = studentAnswers.find(a => a.qIndex === i);
+            if(ans) {
+                const idx = q.options.indexOf(ans.selected);
+                if(idx !== -1 && labels[idx] === q.answer) score++;
             }
-        }
-    });
-
-    const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-    const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
-    
-    // Đóng gói dữ liệu
-    const formData = new URLSearchParams();
-    formData.append('name', document.getElementById('studentName').value.trim());
-    formData.append('studentID', document.getElementById('studentID').value.trim());
-    formData.append('jobName', document.getElementById('job-display-header').innerText);
-    formData.append('score', score);
-    formData.append('status', status);
-    formData.append('mode', modeValue);
-    formData.append('cheat', cheatCount);
-
-    try {
-        // Tăng thời gian chờ hoặc bỏ reload tự động để kiểm tra
-        await fetch(WEB_APP_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString() 
         });
+
+        const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
+        const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
         
-        alert(`KẾT QUẢ: ${score}/30 câu. \nTrạng thái: ${status}\nDữ liệu đã được lưu thành công!`);
-        
-        // Chỉ reload sau khi học viên nhấn OK ở thông báo trên
-        location.reload(); 
-        
-    } catch (e) { 
-        console.error("Lỗi:", e);
-        alert("❌ Lỗi kết nối mạng! Vui lòng chụp ảnh màn hình kết quả này và báo cho giáo viên."); 
+        alert(`KẾT QUẢ: ${score}/30 câu. \nTrạng thái: ${status}`);
+
+        const formData = new URLSearchParams();
+        formData.append('name', document.getElementById('studentName').value.trim());
+        formData.append('studentID', document.getElementById('studentID').value.trim());
+        formData.append('jobName', document.getElementById('job-display-header').innerText);
+        formData.append('score', score);
+        formData.append('status', status);
+        formData.append('mode', modeValue);
+        formData.append('cheat', cheatCount);
+
+        try {
+            await fetch(WEB_APP_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString() 
+            });
+            alert("Dữ liệu đã được lưu hệ thống thành công!");
+            location.reload(); 
+        } catch (e) { 
+            alert("❌ Lỗi lưu dữ liệu! Hãy báo lại với giáo viên."); 
+        }
     }
-}
 </script>
 </body>
 </html>
