@@ -279,46 +279,33 @@
         });
 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-        c// Gửi dữ liệu ngầm (fetch)
+        const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
+        
+        alert(`KẾT QUẢ: ${score}/30 câu. \nTrạng thái: ${status.toUpperCase()}`);
+
         const formData = new URLSearchParams();
         formData.append('name', document.getElementById('studentName').value.trim());
         formData.append('studentID', document.getElementById('studentID').value.trim());
         formData.append('jobName', document.getElementById('job-display-header').innerText);
         formData.append('score', score);
         formData.append('status', status);
-        formData.append('mode', document.getElementById('modeToggle').checked ? "ONTAP" : "THI");
+        formData.append('mode', modeValue);
         formData.append('cheat', cheatCount);
-        fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: formData.toString() });
 
-        // --- ĐỢI 4 GIÂY TRƯỚC KHI HIỆN KẾT QUẢ ---
-        setTimeout(() => {
-            const resOverlay = document.getElementById('result-overlay');
-            const resStatus = document.getElementById('res-status');
-            const resScore = document.getElementById('res-score');
-            const resIcon = document.getElementById('res-icon');
-
-            resStatus.innerText = status;
-            resScore.innerText = `Điểm số của bạn: ${score}/30 câu`;
+        try {
+            await fetch(WEB_APP_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString() 
+            });
             
-            if(score >= 25) {
-                resStatus.style.color = "#28a745";
-                resIcon.innerHTML = "🎉";
-            } else {
-                resStatus.style.color = "#dc3545";
-                resIcon.innerHTML = "🔔";
-            }
-
-            resOverlay.style.display = 'flex';
-
-            // Tự động reload sau 8 giây
-            let count = 8;
-            const reloadInt = setInterval(() => {
-                count--;
-                document.getElementById('res-timer-info').innerText = `Hệ thống tự động quay lại trang chủ sau ${count}s...`;
-                if(count <= 0) { clearInterval(reloadInt); location.reload(); }
-            }, 1000);
-
-        }, 4000);
+            alert("Dữ liệu đã được lưu vào hệ thống của Khoa thành công!");
+            location.reload(); 
+        } catch (e) { 
+            console.error(e);
+            alert("❌ Lỗi lưu dữ liệu! Thầy/Trò vui lòng chụp ảnh màn hình kết quả này."); 
+        }
     }
 </script>
 </body>
