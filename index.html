@@ -112,7 +112,7 @@
 
 <script>
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2QnEmqxdHfmqYZSAc6M2fc0stm_7Wryh_PML0-YmflIld7M--8xkUtHzmVS6hDl6S/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzAFopFBNsmPiQrFgzQcGnwRfO-SPapoJlT4Xgh_3F0q6h6efFrz1klVAisQ6w1hxJt/exec";
 
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
@@ -247,7 +247,7 @@
         formData.append('jobName', document.getElementById('job-display-header').innerText);
         formData.append('score', score);
         formData.append('status', status);
-        formData.append('mode', document.getElementById('modeToggle').checked ? "ÔN TẬP" : "THI THẬT");
+        formData.append('mode', document.getElementById('modeToggle').checked ? "ONTAP" : "THI");
         formData.append('cheat', cheatCount);
 
         try {
@@ -265,4 +265,3 @@
 </script>
 </body>
 </html>
-
