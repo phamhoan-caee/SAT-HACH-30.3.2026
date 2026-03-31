@@ -78,7 +78,7 @@
             <h2 id="res-status" style="font-size: 2.5rem; margin-bottom: 10px;">---</h2>
             <p id="res-score" style="font-size: 1.5rem; color: #333; margin-bottom: 20px;">---</p>
             <hr>
-            <p style="margin-top: 20px; color: #666;">Hệ thống tự động thoát sau <b id="countdown-text" style="color: var(--danger); font-size: 1.4rem;">5</b> giây...</p>
+            <p style="margin-top: 20px; color: #666;">Hệ thống tự động thoát sau <b id="countdown-text" style="color: var(--danger); font-size: 1.4rem;">8</b> giây...</p>
         </div>
     </div>
 
@@ -125,11 +125,13 @@
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi7efMKY3NpqasVYDxSIhADkZYS38Nj7_XbrFZG6ozgLXYSzym/exec";
 
-   let currentStudentName = "", currentStudentID = "", currentJobName = "", currentJobKey = "";
+    let currentStudentName = "", currentStudentID = "", currentJobName = "", currentJobKey = "";
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
-    // --- CÁC HÀM KHỞI TẠO GIỮ NGUYÊN ---
+    window.onblur = () => { if(!isSubmitted && selectedQuestions.length > 0) { cheatCount++; document.getElementById('warning-overlay').style.display = 'flex'; if(cheatCount >= 3) submitQuiz(true); } };
+    window.onfocus = () => { document.getElementById('warning-overlay').style.display = 'none'; };
+
     async function startQuiz() {
         const nameVal = document.getElementById('studentName').value.trim();
         const idVal = document.getElementById('studentID').value.trim();
@@ -177,7 +179,6 @@
                 if (labels[i] === q.answer) cls = "correct";
                 else if (isSelected) cls = "wrong";
             } else if (isSelected) cls = "selected";
-            
             let action = (isPractice && stored) ? "" : `onclick="selectAns(${idx}, '${opt.replace(/'/g, "\\'")}')"`;
             html += `<div class="option-item ${cls}" ${action}><b>${labels[i]}.</b>&nbsp;${opt}</div>`;
         });
@@ -192,26 +193,21 @@
         renderGrid();
     }
 
-    // --- CẬP NHẬT LOGIC CHỌN ĐÁP ÁN ---
     function selectAns(qIdx, ans) {
         if (isSubmitted) return;
-        
         const i = studentAnswers.findIndex(a => a.qIndex === qIdx);
         if(i > -1) studentAnswers[i].selected = ans;
         else studentAnswers.push({qIndex: qIdx, selected: ans});
         
-        showQuestion(qIdx); // Cập nhật màu sắc hiển thị
+        showQuestion(qIdx);
 
         if(qIdx === 29) {
-            // Câu 30: Hiện xác nhận nộp bài ngay lập tức sau khi chọn
-            setTimeout(() => { 
-                submitQuiz(); 
-            }, 100);
+            // Câu 30: Hiện xác nhận nộp bài ngay lập tức
+            setTimeout(() => { submitQuiz(); }, 200);
         } else {
-            // Các câu khác: Tự động chuyển câu sau 3 giây (3000ms)
+            // Các câu khác: Trễ 3 giây (3000ms) trước khi tự chuyển câu
             setTimeout(() => {
-                // Kiểm tra nếu người dùng chưa chuyển câu thủ công thì mới tự chuyển
-                if(currentQuestionIndex === qIdx) {
+                if(currentQuestionIndex === qIdx && !isSubmitted) {
                     showQuestion(qIdx + 1);
                 }
             }, 3000);
@@ -238,11 +234,9 @@
         }, 1000);
     }
 
-    // --- CẬP NHẬT LOGIC KẾT THÚC THI ---
     async function submitQuiz(auto = false) {
         if (isSubmitted) return;
-        
-        // Hiện hộp thoại xác nhận nộp bài (đối với câu 30 hoặc nút nộp bài)
+        // Hiện hộp thoại xác nhận khi chọn câu 30 hoặc bấm nút Nộp bài
         if (!auto && !confirm("Bạn xác nhận nộp bài thi để xem kết quả?")) return;
         
         isSubmitted = true;
@@ -259,35 +253,30 @@
         });
 
         const statusText = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-        
-        // Hiển thị Overlay Kết quả ngay lập tức
         document.getElementById('res-status').innerText = statusText;
         document.getElementById('res-status').style.color = score >= 25 ? "var(--success)" : "var(--danger)";
         document.getElementById('res-score').innerText = `Kết quả: ${score}/30 câu`;
-        document.getElementById('countdown-text').innerText = "8"; // Reset số hiển thị về 8
         document.getElementById('result-overlay').style.display = 'flex';
 
-        // Gửi dữ liệu ngầm về Google Sheets
+        // Gửi dữ liệu về Google Sheets
         const params = new URLSearchParams({
-            'name': currentStudentName,
-            'studentID': currentStudentID,
-            'jobKey': currentJobKey,
-            'jobName': currentJobName,
-            'score': score + "/30",
-            'status': statusText,
+            'name': currentStudentName, 'studentID': currentStudentID,
+            'jobKey': currentJobKey, 'jobName': currentJobName,
+            'score': score + "/30", 'status': statusText,
             'mode': document.getElementById('modeToggle').checked ? "ONTAP" : "THI",
             'cheat': cheatCount
         });
         fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: params.toString() });
 
-        // Tự động đếm ngược 8 giây để quay về màn hình đăng nhập
+        // Tự động đếm ngược 8 giây
         let countdown = 8;
+        document.getElementById('countdown-text').innerText = countdown;
         const countdownTimer = setInterval(() => {
             countdown--;
             document.getElementById('countdown-text').innerText = countdown;
             if (countdown <= 0) {
                 clearInterval(countdownTimer);
-                location.reload(); // Quay về màn hình đăng nhập
+                location.reload(); 
             }
         }, 1000);
     }
