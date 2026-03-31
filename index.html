@@ -107,8 +107,8 @@
     </div>
 
 <script>
-const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi7efMKY3NpqasVYDxSIhADkZYS38Nj7_XbrFZG6ozgLXYSzym/exec";
+    const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi7efMKY3NpqasVYDxSIhADkZYS38Nj7_XbrFZG6ozgLXYSzym/exec";
 
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
@@ -189,29 +189,11 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi
 
         let imageHtml = "";
         let fileName = q.image || ""; 
-        if (!fileName) {
-            const match = q.question.match(/[\w-]+\.(jpg|jpeg|png|gif|webp)/i);
-            if (match) fileName = match[0];
-        }
-
         if (fileName) {
-            fileName = fileName.replace("images/", ""); 
-            imageHtml = `
-                <div style="text-align:center; margin: 15px 0; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                    <img src="images/${fileName}" 
-                         style="max-width:100%; max-height:300px; object-fit: contain; border-radius: 5px;" 
-                         onerror="this.parentElement.style.display='none'">
-                </div>`;
+            imageHtml = `<div style="text-align:center; margin: 15px 0;"><img src="images/${fileName}" style="max-width:100%; max-height:300px; border-radius: 5px;" onerror="this.style.display='none'"></div>`;
         }
 
-        let cleanQuestion = q.question;
-        if (fileName && cleanQuestion.includes(fileName)) {
-            cleanQuestion = cleanQuestion.replace(fileName, "").trim();
-        }
-        if (!cleanQuestion && fileName) cleanQuestion = "Quan sát hình ảnh và trả lời:";
-
-        let html = `<h3 style="margin-bottom:20px; color:var(--caee-blue);">Câu ${idx + 1}: ${cleanQuestion}</h3>`;
-        html += imageHtml;
+        let html = `<h3 style="margin-bottom:20px; color:var(--caee-blue);">Câu ${idx + 1}: ${q.question}</h3>${imageHtml}`;
 
         q.options.forEach((opt, i) => {
             let cls = "";
