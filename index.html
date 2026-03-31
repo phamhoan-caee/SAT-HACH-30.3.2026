@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HỆ THỐNG SÁT HẠCH NGHỀ KHOA MÁY THI CÔNG - CAEE</title>
+    <title>HỆ THỐNG SÁT HẠCH NGHỀ KHOA MÁY THI CÔNG</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
@@ -106,18 +106,13 @@
         </div>
     </div>
 
-    
 <script>
-   // 1. Link gốc Google Sheets (đã thêm &gid= ở cuối)
 const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
-
-// 2. Link Web App 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi7efMKY3NpqasVYDxSIhADkZYS38Nj7_XbrFZG6ozgLXYSzym/exec";
 
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
-    // Các hàm bảo mật
     window.onblur = () => { 
         if(!isSubmitted && selectedQuestions.length > 0) { 
             cheatCount++; 
@@ -143,7 +138,6 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi
         });
     }
 
-    // --- HÀM START QUIZ ĐÃ SỬA LỖI CÚ PHÁP ---
     async function startQuiz() {
         const name = document.getElementById('studentName').value.trim();
         const id = document.getElementById('studentID').value.trim();
@@ -161,7 +155,8 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi
                     question: i.CauHoi,
                     options: [i.A, i.B, i.C, i.D].filter(o => o && o.trim() !== ""),
                     answer: i.DapAnDung ? i.DapAnDung.trim().toUpperCase() : "",
-                    explanation: i.Giaithich || "Thực hiện đúng quy trình ATKT."
+                    explanation: i.Giaithich || "Thực hiện đúng quy trình ATKT.",
+                    image: i["HINH ANH"] ? i["HINH ANH"].trim() : "" 
                 }));
 
                 if(allQuestions.length < 30) return alert("Dữ liệu không đủ 30 câu!");
@@ -177,11 +172,11 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi
                 activateSecurity();
                 showQuestion(0);
                 startTimer();
-            }, // Đóng hàm complete
+            },
             error: function(err) {
                 alert("Lỗi tải dữ liệu. Vui lòng kiểm tra lại kết nối!");
             }
-        }); // Đóng Papa.parse
+        });
     }
 
     function showQuestion(idx) {
@@ -192,10 +187,35 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi
         const isPractice = document.getElementById('modeToggle').checked;
         const labels = ['A', 'B', 'C', 'D'];
 
-        let html = `<h3 style="margin-bottom:20px; color:var(--caee-blue);">Câu ${idx + 1}: ${q.question}</h3>`;
+        let imageHtml = "";
+        let fileName = q.image || ""; 
+        if (!fileName) {
+            const match = q.question.match(/[\w-]+\.(jpg|jpeg|png|gif|webp)/i);
+            if (match) fileName = match[0];
+        }
+
+        if (fileName) {
+            fileName = fileName.replace("images/", ""); 
+            imageHtml = `
+                <div style="text-align:center; margin: 15px 0; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <img src="images/${fileName}" 
+                         style="max-width:100%; max-height:300px; object-fit: contain; border-radius: 5px;" 
+                         onerror="this.parentElement.style.display='none'">
+                </div>`;
+        }
+
+        let cleanQuestion = q.question;
+        if (fileName && cleanQuestion.includes(fileName)) {
+            cleanQuestion = cleanQuestion.replace(fileName, "").trim();
+        }
+        if (!cleanQuestion && fileName) cleanQuestion = "Quan sát hình ảnh và trả lời:";
+
+        let html = `<h3 style="margin-bottom:20px; color:var(--caee-blue);">Câu ${idx + 1}: ${cleanQuestion}</h3>`;
+        html += imageHtml;
+
         q.options.forEach((opt, i) => {
             let cls = "";
-            const isSelected = stored && opt === stored.selected;
+            const isSelected = (stored && opt === stored.selected);
             if (isPractice && stored) {
                 if (labels[i] === q.answer) cls = "correct";
                 else if (isSelected) cls = "wrong";
@@ -205,12 +225,15 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi
             html += `<div class="option-item ${cls}" ${action}><b>${labels[i]}.</b>&nbsp;${opt}</div>`;
         });
 
-        if(isPractice && stored) html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; border-left:5px solid #ffa000; margin-top:10px;"><b>Giải thích:</b> ${q.explanation}</div>`;
-        
+        if (isPractice && stored) {
+            html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; border-left:5px solid #ffa000; margin-top:10px;"><b>Giải thích:</b> ${q.explanation}</div>`;
+        }
+
         html += `<div style="display:flex; justify-content:space-between; margin-top:20px; gap:10px;">
-                    <button class="btn-start" style="background:var(--btn-blue);" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
-                    <button class="btn-start" style="background:var(--btn-blue);" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
+                    <button class="btn-start" style="background:var(--btn-blue); padding:10px;" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
+                    <button class="btn-start" style="background:var(--btn-blue); padding:10px;" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
                 </div>`;
+                
         document.getElementById('quiz-content').innerHTML = html;
         renderGrid();
     }
@@ -248,55 +271,50 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi
         }, 1000);
     }
 
- async function submitQuiz(auto = false) {
-    if (isSubmitted) return;
-    if (!auto && !confirm("Xác nhận nộp bài?")) return;
-    
-    isSubmitted = true;
-    clearInterval(timerInterval);
-
-    // Bước 1: Tính điểm (Logic đã có sẵn của thầy)
-    let score = 0;
-    const labels = ['A', 'B', 'C', 'D'];
-    selectedQuestions.forEach((q, i) => {
-        const ans = studentAnswers.find(a => a.qIndex === i);
-        if (ans) {
-            const idx = q.options.indexOf(ans.selected);
-            if (idx !== -1 && labels[idx] === q.answer) score++;
-        }
-    });
-
-    const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-    const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
-    
-    alert(`KẾT QUẢ: ${score}/30 câu. \nTrạng thái: ${status}`);
-
-    // Bước 2: Chuẩn bị dữ liệu để gửi đi (Sử dụng URLSearchParams để khớp Apps Script)
-    const formData = new URLSearchParams();
-    formData.append('name', document.getElementById('studentName').value.trim());
-    formData.append('studentID', document.getElementById('studentID').value.trim());
-    formData.append('jobName', document.getElementById('job-display-header').innerText);
-    formData.append('score', score);
-    formData.append('status', status);
-    formData.append('mode', modeValue);
-    formData.append('cheat', cheatCount);
-
-    try {
-        // Bước 3: Gửi dữ liệu bằng fetch
-        await fetch(WEB_APP_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString() 
-        });
+    async function submitQuiz(auto = false) {
+        if (isSubmitted) return;
+        if (!auto && !confirm("Xác nhận nộp bài?")) return;
         
-        alert("Dữ liệu đã được lưu vào hệ thống của Khoa thành công!");
-        location.reload(); 
-    } catch (e) { 
-        console.error(e);
-        alert("❌ Lỗi lưu dữ liệu! Thầy/Trò vui lòng chụp ảnh màn hình kết quả này."); 
+        isSubmitted = true;
+        clearInterval(timerInterval);
+
+        let score = 0;
+        const labels = ['A', 'B', 'C', 'D'];
+        selectedQuestions.forEach((q, i) => {
+            const ans = studentAnswers.find(a => a.qIndex === i);
+            if (ans) {
+                const idx = q.options.indexOf(ans.selected);
+                if (idx !== -1 && labels[idx] === q.answer) score++;
+            }
+        });
+
+        const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
+        const modeValue = document.getElementById('modeToggle').checked ? "ONTAP" : "THI";
+        
+        alert(`KẾT QUẢ: ${score}/30 câu. \nTrạng thái: ${status}`);
+
+        const formData = new URLSearchParams();
+        formData.append('name', document.getElementById('studentName').value.trim());
+        formData.append('studentID', document.getElementById('studentID').value.trim());
+        formData.append('jobName', document.getElementById('job-display-header').innerText);
+        formData.append('score', score);
+        formData.append('status', status);
+        formData.append('mode', modeValue);
+        formData.append('cheat', cheatCount);
+
+        try {
+            await fetch(WEB_APP_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString() 
+            });
+            alert("Dữ liệu đã được lưu vào hệ thống thành công!");
+            location.reload(); 
+        } catch (e) { 
+            alert("❌ Lỗi lưu dữ liệu! Vui lòng chụp ảnh màn hình kết quả."); 
+        }
     }
-}
 </script>
 </body>
 </html>
