@@ -15,6 +15,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; padding-top: 70px; }
 
+        /* Lớp phủ cảnh báo gian lận */
         #warning-overlay {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(220, 53, 69, 0.95); color: white; z-index: 9999;
@@ -22,7 +23,7 @@
             flex-direction: column; padding: 20px;
         }
 
-        /* --- GIAO DIỆN KẾT QUẢ HIỆN ĐẠI --- */
+        /* Giao diện thông báo kết quả */
         #result-overlay {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
@@ -43,7 +44,7 @@
         #res-score { font-size: 1.8rem; color: #2c3e50; margin-bottom: 25px; font-weight: 600; }
         .divider { height: 1px; background: linear-gradient(to right, transparent, #eee, transparent); margin-bottom: 20px; }
 
-        /* --- GIAO DIỆN CHÍNH --- */
+        /* Header hệ thống */
         .caee-header {
             background: var(--header-blue); color: white; padding: 10px 20px;
             display: none; justify-content: space-between; align-items: center;
@@ -51,6 +52,7 @@
         }
         .timer-box { background: #ff3333; padding: 8px 15px; border-radius: 4px; font-weight: bold; min-width: 80px; text-align: center; }
 
+        /* Màn hình đăng nhập */
         #start-screen { min-height: 80vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .welcome-container { background: white; width: 100%; max-width: 450px; border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .form-control { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
@@ -61,6 +63,7 @@
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2); font-size: 1rem;
         }
 
+        /* Màn hình làm bài */
         #quiz-screen { padding: 20px; display: none; grid-template-columns: 1fr 320px; gap: 20px; max-width: 1300px; margin: auto; }
         #quiz-content { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
@@ -93,7 +96,7 @@
             <h1 id="res-status">---</h1>
             <h2 id="res-score">---</h2>
             <div class="divider"></div>
-            <p style="color: #888; font-size: 0.9rem;">Hệ thống tự động chuyển về trang đăng nhập sau <b id="res-timer" style="color: var(--btn-blue);">8</b> giây...</p>
+            <p style="color: #888; font-size: 0.9rem;">Hệ thống tự động quay lại trang chủ sau <b id="res-timer" style="color: var(--btn-blue);">8</b> giây...</p>
         </div>
     </div>
 
@@ -139,12 +142,20 @@
 
 <script>
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
+    // THAY LINK WEB APP CỦA BẠN VÀO ĐÂY
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbybZMcHoswAeQG01RCi7efMKY3NpqasVYDxSIhADkZYS38Nj7_XbrFZG6ozgLXYSzym/exec";
 
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
-    window.onblur = () => { if(!isSubmitted && selectedQuestions.length > 0) { cheatCount++; document.getElementById('warning-overlay').style.display = 'flex'; if(cheatCount >= 3) submitQuiz(true); } };
+    // Theo dõi gian lận (rời màn hình)
+    window.onblur = () => { 
+        if(!isSubmitted && selectedQuestions.length > 0) { 
+            cheatCount++; 
+            document.getElementById('warning-overlay').style.display = 'flex'; 
+            if(cheatCount >= 3) submitQuiz(true); // Tự động nộp bài nếu gian lận 3 lần
+        } 
+    };
     window.onfocus = () => { document.getElementById('warning-overlay').style.display = 'none'; };
 
     async function startQuiz() {
@@ -164,11 +175,15 @@
                 }));
                 document.getElementById('display-name').innerText = name.toUpperCase();
                 document.getElementById('job-display-header').innerText = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
+                
+                // Chọn ngẫu nhiên 30 câu
                 selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 30);
+                
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('caee-header').style.display = 'flex';
                 document.getElementById('quiz-screen').style.display = 'grid';
-                showQuestion(0); startTimer();
+                showQuestion(0); 
+                startTimer();
             }
         });
     }
@@ -212,10 +227,8 @@
         else studentAnswers.push({qIndex: qIdx, selected: ans});
         showQuestion(qIdx);
 
-        // NẾU CÂU CUỐI: Chờ 5 giây rồi hiện nộp bài
-        if(qIdx === 29) {
-            setTimeout(() => { if(!isSubmitted) submitQuiz(); }, 5000);
-        } else if(!document.getElementById('modeToggle').checked) {
+        // Tự động chuyển câu nếu không phải chế độ ôn tập
+        if(!document.getElementById('modeToggle').checked && qIdx < 29) {
             setTimeout(() => { if(currentQuestionIndex === qIdx) showQuestion(qIdx + 1); }, 500);
         }
     }
@@ -242,11 +255,12 @@
 
     async function submitQuiz(auto = false) {
         if (isSubmitted) return;
-        if (!auto && !confirm("Bạn đã hoàn thành câu cuối. Xác nhận nộp bài?")) return;
+        if (!auto && !confirm("Xác nhận nộp bài?")) return;
         
         isSubmitted = true;
         clearInterval(timerInterval);
         
+        // Tính điểm
         let score = 0;
         const labels = ['A', 'B', 'C', 'D'];
         selectedQuestions.forEach((q, i) => {
@@ -261,16 +275,14 @@
         const resIcon = document.getElementById('res-icon');
         const resStatus = document.getElementById('res-status');
         
-        if (score >= 25) {
-            resStatus.innerText = "ĐẠT"; resStatus.style.color = "#2ecc71"; resIcon.innerHTML = "✨";
-        } else {
-            resStatus.innerText = "KHÔNG ĐẠT"; resStatus.style.color = "#e74c3c"; resIcon.innerHTML = "🔔";
-        }
-        
+        // Hiển thị giao diện kết quả
+        resStatus.innerText = status;
+        resStatus.style.color = (score >= 25) ? "#2ecc71" : "#e74c3c";
+        resIcon.innerHTML = (score >= 25) ? "✨" : "🔔";
         document.getElementById('res-score').innerText = `Kết quả: ${score}/30 câu`;
         document.getElementById('result-overlay').style.display = 'flex';
 
-        // Gửi dữ liệu
+        // Gửi dữ liệu về Google Sheets (Đã thêm biến cheat)
         const formData = new URLSearchParams();
         formData.append('name', document.getElementById('studentName').value.trim());
         formData.append('studentID', document.getElementById('studentID').value.trim());
@@ -278,9 +290,18 @@
         formData.append('score', score);
         formData.append('status', status);
         formData.append('mode', document.getElementById('modeToggle').checked ? "ÔN TẬP" : "THI THẬT");
-        fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: formData.toString() });
+        formData.append('cheat', cheatCount); // <--- ĐÃ CẬP NHẬT BIẾN CHEAT Ở ĐÂY
 
-        // Đếm ngược 8 giây để quay lại
+        try {
+            fetch(WEB_APP_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString() 
+            });
+        } catch(e) { console.log("Lỗi fetch:", e); }
+
+        // Đếm ngược 8 giây để reload
         let count = 8;
         const countInt = setInterval(() => {
             count--;
@@ -291,4 +312,3 @@
 </script>
 </body>
 </html>
-
