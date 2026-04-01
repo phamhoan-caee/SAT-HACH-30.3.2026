@@ -68,7 +68,7 @@
                 <div class="res-item">Học viên: <b id="res-name-val">---</b></div>
                 <div class="res-item">Khóa/Mã: <b id="res-id-val">---</b></div>
                 <div class="res-item">Số điểm: <b id="res-score-val">---</b></div>
-                <div class="res-cert-msg">KẾT QUẢ NÀY ĐÃ ĐƯỢC NHÀ TRƯỜNG LƯU VÀ DÙNG ĐỂ XÉT CẤP CHỨNG CHỈ</div>
+                <div class="res-cert-msg">KẾT QUẢ NÀY ĐƯỢC LƯU TẠI PHÒNG ĐẠO TẠO VÀ DÙNG ĐỂ XÉT CẤP CHỨNG CHỈ</div>
             </div>
 
             <p class="res-timer-msg">Hệ thống tự động quay về trang đăng nhập sau <span id="res-count">8</span> giây...</p>
@@ -235,7 +235,7 @@
         formData.append('jobName', document.getElementById('job-display-header').innerText);
         formData.append('score', score);
         formData.append('status', status);
-        formData.append('mode', document.getElementById('modeToggle').checked ? "ONTAP" : "THI");
+        formData.append('mode', document.getElementById('modeToggle').checked ? "ontap_" : "sathach_");
         formData.append('cheat', cheatCount);
         fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: formData.toString() });
 
